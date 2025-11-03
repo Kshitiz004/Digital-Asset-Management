@@ -21,7 +21,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { User } from '../entities/user.entity';
+import type { User } from '../entities/user.entity';
 
 /**
  * Users Controller - Handles user management endpoints
