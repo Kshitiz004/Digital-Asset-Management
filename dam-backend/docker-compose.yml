@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database - Main database
+  postgres:
+    image: postgres:15-alpine
+    container_name: dam_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: dam_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dam_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB Database - Logging
+  mongodb:
+    image: mongo:7
+    container_name: dam_mongodb
+    environment:
+      MONGO_INITDB_DATABASE: dam_logs
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - dam_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dam_backend
+    environment:
+      # Database Configuration
+      DB_TYPE: postgres
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: dam_db
+      
+      # MongoDB Configuration
+      MONGODB_URI: mongodb://mongodb:27017/dam_logs
+      
+      # JWT Configuration
+      JWT_SECRET: ${JWT_SECRET:-your-secret-jwt-key-change-in-production}
+      JWT_EXPIRES_IN: 24h
+      
+      # Google OAuth (configure in .env)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:3000/auth/google/callback}
+      
+      # AWS S3 (configure in .env)
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME:-dam-assets-bucket}
+      
+      # Application Configuration
+      PORT: 3000
+      NODE_ENV: ${NODE_ENV:-production}
+      
+      # Webhook Configuration
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-your-webhook-secret-key}
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    networks:
+      - dam_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  mongodb_data:
+
+networks:
+  dam_network:
+    driver: bridge
+
+
