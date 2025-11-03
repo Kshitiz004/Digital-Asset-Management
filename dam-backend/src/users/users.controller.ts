@@ -21,7 +21,6 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import type { User } from '../entities/user.entity';
 
 /**
  * Users Controller - Handles user management endpoints
@@ -67,8 +66,7 @@ export class UsersController {
       createdAt: Date;
     };
   }> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    const user = (await this.usersService.createUser(createUserDto)) as User;
+    const user = await this.usersService.createUser(createUserDto);
     return {
       message: 'User created successfully',
       user: {
