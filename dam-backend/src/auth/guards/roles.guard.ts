@@ -1,5 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import type { AuthenticatedRequest } from '../../common/interfaces/authenticated-request.interface';
 
 /**
  * Roles Guard - Implements Role-Based Access Control (RBAC)
@@ -22,11 +23,16 @@ export class RolesGuard implements CanActivate {
     }
 
     // Get user from request (attached by JWT strategy)
-    const request = context.switchToHttp().getRequest();
+
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+
     const user = request.user;
 
     // Check if user exists and has required role
-    return user && requiredRoles.includes(user.role);
+    if (user == null) {
+      return false;
+    }
+
+    return requiredRoles.includes(user.role);
   }
 }
-

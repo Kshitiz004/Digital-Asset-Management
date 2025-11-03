@@ -83,9 +83,11 @@ export class WebhookService {
           return;
         }
       } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
         console.error(
           `Webhook attempt ${attempt + 1} failed for ${url}:`,
-          error.message,
+          errorMessage,
         );
 
         // If last attempt, log final failure
@@ -115,7 +117,10 @@ export class WebhookService {
   /**
    * Trigger webhook for all registered URLs
    */
-  async triggerWebhook(event: string, data: any): Promise<void> {
+  async triggerWebhook(
+    event: string,
+    data: Record<string, unknown>,
+  ): Promise<void> {
     // Don't send if no webhooks configured
     if (this.webhookUrls.length === 0) {
       return;
@@ -165,4 +170,3 @@ export class WebhookService {
     }
   }
 }
-

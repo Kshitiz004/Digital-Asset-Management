@@ -31,11 +31,13 @@ export class AnalyticsService {
    */
   async getAdminAnalytics() {
     // Total storage usage across all users
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const totalStorage = await this.assetRepository
       .createQueryBuilder('asset')
       .select('SUM(asset.size)', 'total')
       .getRawOne();
-    const totalStorageBytes = parseInt(totalStorage?.total || '0');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const totalStorageBytes = parseInt(String(totalStorage?.total ?? '0'), 10);
 
     // Most active users (top 10 by activity count)
     const mostActiveUsers = await this.activityLogModel.aggregate([
@@ -97,12 +99,14 @@ export class AnalyticsService {
    */
   async getUserAnalytics(userId: string) {
     // User's storage usage
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const userAssets = await this.assetRepository
       .createQueryBuilder('asset')
       .where('asset.uploaderId = :userId', { userId })
       .select('SUM(asset.size)', 'total')
       .getRawOne();
-    const userStorageBytes = parseInt(userAssets?.total || '0');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const userStorageBytes = parseInt(String(userAssets?.total ?? '0'), 10);
 
     // Asset type distribution
     const assetTypes = await this.assetRepository
@@ -148,11 +152,13 @@ export class AnalyticsService {
         total: userStorageBytes,
         totalMB: (userStorageBytes / (1024 * 1024)).toFixed(2),
       },
-      assetTypeDistribution: assetTypes.map((item) => ({
-        type: item.type,
-        count: parseInt(item.count),
-        totalSize: parseInt(item.totalSize || '0'),
-      })),
+      assetTypeDistribution: assetTypes.map(
+        (item: { type: string; count: string; totalSize: string | null }) => ({
+          type: String(item.type),
+          count: parseInt(String(item.count), 10),
+          totalSize: parseInt(String(item.totalSize ?? '0'), 10),
+        }),
+      ),
       recentActivity: recentActivity.map((activity) => ({
         type: activity.activityType,
         date: activity.createdAt,
@@ -166,4 +172,3 @@ export class AnalyticsService {
     };
   }
 }
-

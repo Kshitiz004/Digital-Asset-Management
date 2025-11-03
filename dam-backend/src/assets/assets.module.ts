@@ -27,4 +27,3 @@ import { WebhookService } from '../services/webhook.service';
   exports: [AssetsService],
 })
 export class AssetsModule {}
-

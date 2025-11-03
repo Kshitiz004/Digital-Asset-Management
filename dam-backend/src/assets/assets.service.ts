@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -92,11 +91,13 @@ export class AssetsService {
 
       return asset;
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       await this.loggerService.logError(
         'failed_upload',
         userId,
         userName,
-        error.message,
+        errorMessage,
         { filename: file.originalname },
       );
       throw error;
@@ -107,7 +108,9 @@ export class AssetsService {
    * Get all assets for a user
    */
   async getUserAssets(userId: string, assetType?: string): Promise<Asset[]> {
-    const where: any = { uploaderId: userId };
+    const where: { uploaderId: string; assetType?: string } = {
+      uploaderId: userId,
+    };
     if (assetType) {
       where.assetType = assetType;
     }
@@ -123,7 +126,7 @@ export class AssetsService {
    * Get all assets (admin only)
    */
   async getAllAssets(assetType?: string): Promise<Asset[]> {
-    const where: any = {};
+    const where: { assetType?: string } = {};
     if (assetType) {
       where.assetType = assetType;
     }
@@ -139,7 +142,7 @@ export class AssetsService {
    * Get all shared assets (for viewers)
    */
   async getSharedAssets(assetType?: string): Promise<Asset[]> {
-    const where: any = { isShared: true };
+    const where: { isShared: boolean; assetType?: string } = { isShared: true };
     if (assetType) {
       where.assetType = assetType;
     }
@@ -263,11 +266,13 @@ export class AssetsService {
         userId,
       });
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       await this.loggerService.logError(
         'failed_delete',
         userId,
         userName,
-        error.message,
+        errorMessage,
         { assetId },
       );
       throw error;
@@ -333,4 +338,3 @@ export class AssetsService {
     return { asset, downloadUrl };
   }
 }
-

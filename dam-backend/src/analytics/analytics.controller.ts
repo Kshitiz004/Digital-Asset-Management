@@ -9,6 +9,7 @@ import { AnalyticsService } from './analytics.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import type { AuthenticatedRequest } from '../common/interfaces/authenticated-request.interface';
 
 /**
  * Analytics Controller - Provides analytics endpoints
@@ -42,7 +43,7 @@ export class AnalyticsController {
   @Roles('user', 'admin')
   @ApiOperation({ summary: 'Get user analytics' })
   @ApiResponse({ status: 200, description: 'User analytics retrieved' })
-  async getUserAnalytics(@Req() req) {
+  async getUserAnalytics(@Req() req: AuthenticatedRequest) {
     return this.analyticsService.getUserAnalytics(req.user.userId);
   }
 }

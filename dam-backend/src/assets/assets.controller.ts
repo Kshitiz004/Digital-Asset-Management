@@ -13,6 +13,7 @@ import {
   Query,
   ForbiddenException,
 } from '@nestjs/common';
+import type { AuthenticatedRequest } from '../common/interfaces/authenticated-request.interface';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
@@ -75,7 +76,7 @@ export class AssetsController {
     @UploadedFile() file: Express.Multer.File,
     @Body('tags') tags: string,
     @Body('description') description: string,
-    @Req() req,
+    @Req() req: AuthenticatedRequest,
   ) {
     if (!file) {
       throw new Error('File is required');
@@ -98,7 +99,10 @@ export class AssetsController {
   @Roles('user', 'admin', 'viewer')
   @ApiOperation({ summary: 'Get user assets' })
   @ApiResponse({ status: 200, description: 'Assets retrieved successfully' })
-  async getUserAssets(@Req() req, @Query('assetType') assetType?: string) {
+  async getUserAssets(
+    @Req() req: AuthenticatedRequest,
+    @Query('assetType') assetType?: string,
+  ) {
     // Viewer role can only see shared assets
     if (req.user.role === 'viewer') {
       return this.assetsService.getSharedAssets(assetType);
@@ -127,22 +131,31 @@ export class AssetsController {
   @Roles('user', 'admin', 'viewer')
   @ApiOperation({ summary: 'Get asset by ID' })
   @ApiResponse({ status: 200, description: 'Asset retrieved' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Not shared or not owner' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Not shared or not owner',
+  })
   @ApiResponse({ status: 404, description: 'Asset not found' })
   @ApiParam({ name: 'id', description: 'Asset UUID' })
-  async getAsset(@Param('id') id: string, @Req() req) {
+  async getAsset(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     const asset = await this.assetsService.getAssetById(id);
-    
+
     // Viewer role can only view shared assets
     if (req.user.role === 'viewer' && !asset.isShared) {
       throw new ForbiddenException('You can only view shared assets');
     }
-    
+
     // User/admin can only view their own assets (unless admin)
-    if (req.user.role !== 'admin' && asset.uploaderId !== req.user.userId && !asset.isShared) {
-      throw new ForbiddenException('You do not have permission to view this asset');
+    if (
+      req.user.role !== 'admin' &&
+      asset.uploaderId !== req.user.userId &&
+      !asset.isShared
+    ) {
+      throw new ForbiddenException(
+        'You do not have permission to view this asset',
+      );
     }
-    
+
     return asset;
   }
 
@@ -154,9 +167,15 @@ export class AssetsController {
   @Roles('user', 'admin', 'viewer')
   @ApiOperation({ summary: 'Get download URL for asset' })
   @ApiResponse({ status: 200, description: 'Download URL generated' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Not shared or not owner' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Not shared or not owner',
+  })
   @ApiParam({ name: 'id', description: 'Asset UUID' })
-  async getDownloadUrl(@Param('id') id: string, @Req() req) {
+  async getDownloadUrl(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
     // For viewer role, check if asset is shared
     if (req.user.role === 'viewer') {
       const asset = await this.assetsService.getAssetById(id);
@@ -168,7 +187,6 @@ export class AssetsController {
       id,
       req.user.userId,
       req.user.email,
-      req.user.role,
     );
   }
 
@@ -185,7 +203,7 @@ export class AssetsController {
   async updateAsset(
     @Param('id') id: string,
     @Body() updateDto: UpdateAssetDto,
-    @Req() req,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.assetsService.updateAsset(
       id,
@@ -205,7 +223,7 @@ export class AssetsController {
   @ApiResponse({ status: 200, description: 'Asset deleted' })
   @ApiResponse({ status: 403, description: 'Forbidden - Not owner' })
   @ApiParam({ name: 'id', description: 'Asset UUID' })
-  async deleteAsset(@Param('id') id: string, @Req() req) {
+  async deleteAsset(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     await this.assetsService.deleteAsset(
       id,
       req.user.userId,
@@ -223,7 +241,7 @@ export class AssetsController {
   @ApiOperation({ summary: 'Share asset publicly' })
   @ApiResponse({ status: 200, description: 'Asset shared' })
   @ApiParam({ name: 'id', description: 'Asset UUID' })
-  async shareAsset(@Param('id') id: string, @Req() req) {
+  async shareAsset(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.assetsService.shareAsset(id, req.user.userId, req.user.email);
   }
 

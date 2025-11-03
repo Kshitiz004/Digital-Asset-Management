@@ -25,4 +25,3 @@ import { ActivityLog, ActivityLogSchema } from '../schemas/activity-log.schema';
   exports: [AnalyticsService],
 })
 export class AnalyticsModule {}
-

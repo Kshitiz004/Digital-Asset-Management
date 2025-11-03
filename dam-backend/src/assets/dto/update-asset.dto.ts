@@ -23,4 +23,3 @@ export class UpdateAssetDto {
   @IsOptional()
   description?: string;
 }
-

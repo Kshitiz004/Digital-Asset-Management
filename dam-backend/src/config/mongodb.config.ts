@@ -12,4 +12,3 @@ export const getMongoConfig = (
     uri: configService.get('MONGODB_URI', 'mongodb://localhost:27017/dam_logs'),
   };
 };
-

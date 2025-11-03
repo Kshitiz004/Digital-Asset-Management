@@ -5,7 +5,9 @@ import { ConfigService } from '@nestjs/config';
  * Configuration for PostgreSQL database connection
  * This sets up TypeORM to connect to PostgreSQL with entities
  */
-export const getPostgresConfig = (configService: ConfigService): TypeOrmModuleOptions => {
+export const getPostgresConfig = (
+  configService: ConfigService,
+): TypeOrmModuleOptions => {
   return {
     type: 'postgres',
     host: configService.get('DB_HOST', 'localhost'),
@@ -18,5 +20,3 @@ export const getPostgresConfig = (configService: ConfigService): TypeOrmModuleOp
     logging: configService.get('NODE_ENV') === 'development',
   };
 };
-
-

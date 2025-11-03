@@ -30,7 +30,7 @@ export class LoggerService {
       assetFilename?: string;
       ipAddress?: string;
       userAgent?: string;
-      metadata?: any;
+      metadata?: Record<string, unknown>;
       errorMessage?: string;
       duration?: number;
     } = {},
@@ -113,7 +113,7 @@ export class LoggerService {
     userId: string,
     userName: string,
     errorMessage: string,
-    metadata?: any,
+    metadata?: Record<string, unknown>,
   ): Promise<void> {
     await this.log(activityType, userId, userName, {
       errorMessage,
@@ -136,4 +136,3 @@ export class LoggerService {
     });
   }
 }
-

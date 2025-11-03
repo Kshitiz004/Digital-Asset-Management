@@ -67,7 +67,9 @@ export class AuthService {
     const roleName = registerDto.roleName || 'user';
     const validRoles = ['admin', 'user', 'viewer'];
     if (!validRoles.includes(roleName)) {
-      throw new BadRequestException(`Invalid role. Must be one of: ${validRoles.join(', ')}`);
+      throw new BadRequestException(
+        `Invalid role. Must be one of: ${validRoles.join(', ')}`,
+      );
     }
 
     // Get or create role
@@ -98,7 +100,8 @@ export class AuthService {
     const access_token = this.jwtService.sign(payload);
 
     // Return user info (without password) and token
-    const { password, ...userWithoutPassword } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password, ...userWithoutPassword } = user;
     return {
       user: userWithoutPassword,
       access_token,
@@ -139,7 +142,8 @@ export class AuthService {
     const access_token = this.jwtService.sign(payload);
 
     // Return user info (without password) and token
-    const { password, ...userWithoutPassword } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password, ...userWithoutPassword } = user;
     return {
       user: userWithoutPassword,
       access_token,
@@ -170,9 +174,12 @@ export class AuthService {
    * 3. If not, create new user with 'user' role
    * 4. Return user info and JWT token
    */
-  async googleLogin(
-    userProfile: any,
-  ): Promise<{ user: Partial<User>; access_token: string }> {
+  async googleLogin(userProfile: {
+    id: string;
+    email: string;
+    name: string;
+    picture: string;
+  }): Promise<{ user: Partial<User>; access_token: string }> {
     // Find user by email
     let user = await this.userRepository.findOne({
       where: { email: userProfile.email },
@@ -212,11 +219,11 @@ export class AuthService {
     const access_token = this.jwtService.sign(payload);
 
     // Return user info (without password) and token
-    const { password, ...userWithoutPassword } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password, ...userWithoutPassword } = user;
     return {
       user: userWithoutPassword,
       access_token,
     };
   }
 }
-

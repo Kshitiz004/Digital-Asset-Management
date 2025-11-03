@@ -33,20 +33,25 @@ export class GoogleOAuthStrategy extends PassportStrategy(Strategy, 'google') {
    * Validate method - called after Google authentication
    * Receives user profile from Google
    */
-  async validate(
+  validate(
     accessToken: string,
-    refreshToken: string,
-    profile: any,
+    _refreshToken: string,
+    profile: {
+      id: string;
+      name: { givenName: string; familyName: string };
+      emails: Array<{ value: string }>;
+      photos: Array<{ value: string }>;
+    },
     done: VerifyCallback,
-  ): Promise<any> {
+  ): void {
     // Extract user info from Google profile
     const { id, name, emails, photos } = profile;
 
     const user = {
       id,
-      email: emails[0].value,
-      name: name.givenName + ' ' + name.familyName,
-      picture: photos[0].value,
+      email: emails[0]?.value ?? '',
+      name: `${name.givenName} ${name.familyName}`,
+      picture: photos[0]?.value ?? '',
       accessToken,
     };
 

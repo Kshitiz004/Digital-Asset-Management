@@ -20,4 +20,3 @@ import { S3Service } from '../services/s3.service';
   exports: [UsersService],
 })
 export class UsersModule {}
-

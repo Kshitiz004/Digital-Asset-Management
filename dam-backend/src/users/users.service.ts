@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -58,7 +62,9 @@ export class UsersService {
     const roleName = createUserDto.roleName || 'user';
     const validRoles = ['admin', 'user', 'viewer'];
     if (!validRoles.includes(roleName)) {
-      throw new BadRequestException(`Invalid role. Must be one of: ${validRoles.join(', ')}`);
+      throw new BadRequestException(
+        `Invalid role. Must be one of: ${validRoles.join(', ')}`,
+      );
     }
 
     // Get or create role
@@ -137,7 +143,9 @@ export class UsersService {
     // Validate role name
     const validRoles = ['admin', 'user', 'viewer'];
     if (!validRoles.includes(roleName)) {
-      throw new BadRequestException(`Invalid role. Must be one of: ${validRoles.join(', ')}`);
+      throw new BadRequestException(
+        `Invalid role. Must be one of: ${validRoles.join(', ')}`,
+      );
     }
 
     user.roleName = roleName;

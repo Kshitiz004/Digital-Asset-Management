@@ -37,7 +37,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    * Validate method - called after JWT is verified
    * Payload contains: { sub: userId, email, role }
    */
-  async validate(payload: any) {
+  async validate(payload: { sub: string; email: string; role: string }) {
     // Validate user still exists in database
     const user = await this.authService.validateUser(payload.sub);
 
@@ -54,4 +54,3 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     };
   }
 }
-

@@ -62,4 +62,3 @@ export class User {
   })
   updatedAt: Date;
 }
-
