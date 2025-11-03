@@ -21,6 +21,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { User } from '../entities/user.entity';
 
 /**
  * Users Controller - Handles user management endpoints
@@ -31,7 +32,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class UsersController {
-  constructor(private usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) {}
 
   /**
    * Get all users
@@ -66,7 +67,8 @@ export class UsersController {
       createdAt: Date;
     };
   }> {
-    const user = await this.usersService.createUser(createUserDto);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    const user = (await this.usersService.createUser(createUserDto)) as User;
     return {
       message: 'User created successfully',
       user: {
