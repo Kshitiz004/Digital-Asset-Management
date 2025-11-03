@@ -25,13 +25,16 @@ import { Role } from '../entities/role.entity';
     // JWT: Configure with secret and expiration
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get(
-          'JWT_SECRET',
-          'your-secret-jwt-key-change-in-production',
-        ),
-        signOptions: { expiresIn: configService.get('JWT_EXPIRES_IN', '24h') },
-      }),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      useFactory: (configService: ConfigService) =>
+        ({
+          secret:
+            configService.get<string>('JWT_SECRET') ||
+            'your-secret-jwt-key-change-in-production',
+          signOptions: {
+            expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '24h',
+          },
+        }) as any,
       inject: [ConfigService],
     }),
   ],
