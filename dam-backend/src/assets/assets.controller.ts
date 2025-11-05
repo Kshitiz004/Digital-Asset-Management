@@ -124,6 +124,30 @@ export class AssetsController {
   }
 
   /**
+   * Get view URL for asset (opens in browser)
+   * Viewer role: Can only view shared assets
+   */
+  @Get(':id/view')
+  @Roles('user', 'admin', 'viewer')
+  @ApiOperation({ summary: 'Get view URL for asset' })
+  @ApiResponse({ status: 200, description: 'View URL generated' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Not shared or not owner',
+  })
+  @ApiParam({ name: 'id', description: 'Asset UUID' })
+  async getViewUrl(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    // For viewer role, check if asset is shared
+    if (req.user.role === 'viewer') {
+      const asset = await this.assetsService.getAssetById(id);
+      if (!asset.isShared) {
+        throw new ForbiddenException('You can only view shared assets');
+      }
+    }
+    return this.assetsService.getViewUrl(id, req.user.userId, req.user.email);
+  }
+
+  /**
    * Get asset by ID
    * Viewer role: Can only view shared assets
    */

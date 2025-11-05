@@ -58,6 +58,8 @@ export const assetsAPI = {
   
   getById: (id: string) => apiClient.get(`/assets/${id}`),
   
+  getViewUrl: (id: string) => apiClient.get(`/assets/${id}/view`),
+  
   getDownloadUrl: (id: string) => apiClient.get(`/assets/${id}/download`),
   
   update: (id: string, data: { tags?: string; description?: string }) =>

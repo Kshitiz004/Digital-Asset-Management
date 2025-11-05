@@ -68,7 +68,7 @@ export default function AssetList({ userRole }: AssetListProps) {
 
   const handleView = async (asset: Asset) => {
     try {
-      const response = await assetsAPI.getDownloadUrl(asset.id);
+      const response = await assetsAPI.getViewUrl(asset.id);
       const url = response.data;
       // Open in new tab for viewing
       window.open(url, '_blank');
