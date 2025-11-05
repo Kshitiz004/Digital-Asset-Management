@@ -153,7 +153,10 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-600">
-          <a href="http://localhost:3000/auth/google" className="text-indigo-600 hover:underline">
+          <a
+            href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/auth/google`}
+            className="text-indigo-600 hover:underline"
+          >
             Or login with Google →
           </a>
         </div>
