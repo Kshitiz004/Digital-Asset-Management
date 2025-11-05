@@ -18,9 +18,15 @@ async function bootstrap() {
 
   // Enable CORS for frontend communication
   // Support both local and production URLs
-  const allowedOrigins = process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim())
-    : ['http://localhost:3000', 'http://localhost:3001'];
+  // If CORS_ORIGINS is set to "*" or "ALL", allow all origins
+  const corsOrigins = process.env.CORS_ORIGINS;
+  const allowAllOrigins = corsOrigins === '*' || corsOrigins === 'ALL';
+
+  const allowedOrigins = allowAllOrigins
+    ? true // Allow all origins
+    : corsOrigins
+      ? corsOrigins.split(',').map((origin) => origin.trim())
+      : ['http://localhost:3000', 'http://localhost:3001'];
 
   app.enableCors({
     origin: allowedOrigins,
