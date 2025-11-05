@@ -9,6 +9,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -58,7 +59,10 @@ interface GoogleUser {
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private configService: ConfigService,
+  ) {}
 
   /**
    * Register new user with email/password
@@ -114,11 +118,10 @@ export class AuthController {
     // User data from Google is in req.user (set by GoogleOAuthStrategy)
     const result = await this.authService.googleLogin(req.user);
 
-    // In production, redirect to frontend with token
-    // For development, return JSON with token
-    res.redirect(
-      `http://localhost:3001/auth/callback?token=${result.access_token}`,
-    );
+    // Redirect to frontend with token (supports both local and production)
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3001';
+    res.redirect(`${frontendUrl}/auth/callback?token=${result.access_token}`);
   }
 
   /**

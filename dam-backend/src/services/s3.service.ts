@@ -123,7 +123,11 @@ export class S3Service {
     try {
       if (this.useLocalStorage) {
         // For local storage, return the file path
-        return `http://localhost:${this.configService.get('PORT', 3000)}/uploads/${key}`;
+        // Support both local and production URLs
+        const baseUrl =
+          this.configService.get<string>('API_URL') ||
+          `http://localhost:${this.configService.get('PORT', 3000)}`;
+        return `${baseUrl}/uploads/${key}`;
       } else {
         // AWS S3 presigned URL
         const params: AWS.S3.GetObjectRequest = {
@@ -175,7 +179,11 @@ export class S3Service {
     try {
       if (this.useLocalStorage) {
         // For local storage, files are accessible via the public URL
-        return `http://localhost:${this.configService.get('PORT', 3000)}/uploads/${key}`;
+        // Support both local and production URLs
+        const baseUrl =
+          this.configService.get<string>('API_URL') ||
+          `http://localhost:${this.configService.get('PORT', 3000)}`;
+        return `${baseUrl}/uploads/${key}`;
       } else {
         // Update S3 ACL to public-read
         await this.s3!.putObjectAcl({
