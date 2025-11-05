@@ -202,6 +202,26 @@ export class AssetsService {
       asset.filename,
     );
 
+    // Log download activity (non-blocking)
+    this.loggerService
+      .logView(userId, userName, asset.id, asset.filename)
+      .catch((err) => console.error('Failed to log download activity:', err));
+
+    return url;
+  }
+
+  /**
+   * Get signed view URL for asset (opens in browser, no forced download)
+   */
+  async getViewUrl(
+    assetId: string,
+    userId: string,
+    userName: string,
+  ): Promise<string> {
+    const asset = await this.getAssetById(assetId);
+    // Don't pass filename - allows browser to display instead of forcing download
+    const url = await this.s3Service.getSignedUrl(asset.s3Key, 3600);
+
     // Log view activity (non-blocking)
     this.loggerService
       .logView(userId, userName, asset.id, asset.filename)
