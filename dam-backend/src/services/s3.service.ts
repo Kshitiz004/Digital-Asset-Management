@@ -119,7 +119,11 @@ export class S3Service {
    * Generate presigned URL for file download
    * Presigned URLs are temporary and expire after specified time
    */
-  async getSignedUrl(key: string, expiresIn: number = 3600): Promise<string> {
+  async getSignedUrl(
+    key: string,
+    expiresIn: number = 3600,
+    filename?: string,
+  ): Promise<string> {
     try {
       if (this.useLocalStorage) {
         // For local storage, return the file path
@@ -129,10 +133,14 @@ export class S3Service {
           `http://localhost:${this.configService.get('PORT', 3000)}`;
         return `${baseUrl}/uploads/${key}`;
       } else {
-        // AWS S3 presigned URL
+        // AWS S3 presigned URL with Content-Disposition header to force download
         const params: AWS.S3.GetObjectRequest = {
           Bucket: this.bucketName,
           Key: key,
+          // Add Content-Disposition header to force download instead of opening in browser
+          ResponseContentDisposition: filename
+            ? `attachment; filename="${filename}"`
+            : 'attachment',
         };
 
         const url = await this.s3!.getSignedUrlPromise('getObject', {

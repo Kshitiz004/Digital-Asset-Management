@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -70,36 +71,51 @@ export class AssetsService {
       // Save to database
       await this.assetRepository.save(asset);
 
-      // Log activity
+      // Log activity (non-blocking - don't fail if logging fails)
       const duration = Date.now() - startTime;
-      await this.loggerService.logUpload(
-        userId,
-        userName,
-        asset.id,
-        asset.filename,
-        duration,
-      );
+      this.loggerService
+        .logUpload(userId, userName, asset.id, asset.filename, duration)
+        .catch((err) => console.error('Failed to log upload activity:', err));
 
-      // Trigger webhook for upload event
-      await this.webhookService.triggerWebhook('asset.uploaded', {
-        assetId: asset.id,
-        filename: asset.filename,
-        userId,
-        size: asset.size,
-        assetType,
-      });
+      // Trigger webhook for upload event (non-blocking)
+      this.webhookService
+        .triggerWebhook('asset.uploaded', {
+          assetId: asset.id,
+          filename: asset.filename,
+          userId,
+          size: asset.size,
+          assetType,
+        })
+        .catch((err) => console.error('Failed to trigger webhook:', err));
 
       return asset;
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
-      await this.loggerService.logError(
-        'failed_upload',
+      const errorStack = error instanceof Error ? error.stack : undefined;
+
+      console.error('Upload failed:', {
+        error: errorMessage,
+        stack: errorStack,
+        filename: file.originalname,
+        size: file.size,
         userId,
-        userName,
-        errorMessage,
-        { filename: file.originalname },
-      );
+      });
+
+      // Log error (non-blocking)
+      this.loggerService
+        .logError('failed_upload', userId, userName, errorMessage, {
+          filename: file.originalname,
+          size: file.size,
+        })
+        .catch((err) => console.error('Failed to log error:', err));
+
+      // Re-throw with more descriptive message
+      if (error instanceof Error) {
+        throw new InternalServerErrorException(
+          `Failed to upload file: ${error.message}`,
+        );
+      }
       throw error;
     }
   }
@@ -179,15 +195,17 @@ export class AssetsService {
     userName: string,
   ): Promise<string> {
     const asset = await this.getAssetById(assetId);
-    const url = await this.s3Service.getSignedUrl(asset.s3Key);
-
-    // Log view activity
-    await this.loggerService.logView(
-      userId,
-      userName,
-      asset.id,
+    // Pass filename to S3 service to set Content-Disposition header for download
+    const url = await this.s3Service.getSignedUrl(
+      asset.s3Key,
+      3600,
       asset.filename,
     );
+
+    // Log view activity (non-blocking)
+    this.loggerService
+      .logView(userId, userName, asset.id, asset.filename)
+      .catch((err) => console.error('Failed to log view activity:', err));
 
     return url;
   }
@@ -333,7 +351,12 @@ export class AssetsService {
       throw new NotFoundException('Asset is not shared');
     }
 
-    const downloadUrl = await this.s3Service.getSignedUrl(asset.s3Key);
+    // Pass filename to force download for shared assets
+    const downloadUrl = await this.s3Service.getSignedUrl(
+      asset.s3Key,
+      3600,
+      asset.filename,
+    );
 
     return { asset, downloadUrl };
   }

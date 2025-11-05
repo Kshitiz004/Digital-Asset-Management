@@ -82,19 +82,26 @@ export default function AssetList({ userRole }: AssetListProps) {
       const response = await assetsAPI.getDownloadUrl(asset.id);
       const url = response.data;
       
-      // Always fetch as blob to force download (prevents browser from opening PDFs/docs)
+      // For S3 presigned URLs, we need to fetch and create blob to force download
+      // This handles CORS and ensures files download instead of opening
       try {
-        const fileResponse = await fetch(url);
+        const fileResponse = await fetch(url, {
+          method: 'GET',
+          mode: 'cors',
+        });
+        
         if (!fileResponse.ok) {
           throw new Error(`HTTP error! status: ${fileResponse.status}`);
         }
+        
         const blob = await fileResponse.blob();
         const blobUrl = window.URL.createObjectURL(blob);
         
+        // Create download link
         const link = document.createElement('a');
         link.href = blobUrl;
         link.download = asset.filename;
-        link.style.display = 'none'; // Hide the link
+        link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -105,9 +112,12 @@ export default function AssetList({ userRole }: AssetListProps) {
         }, 100);
       } catch (fetchError) {
         // Fallback: try direct download with download attribute
+        // For S3 URLs, this might open in new tab, but it's a fallback
         const link = document.createElement('a');
         link.href = url;
         link.download = asset.filename;
+        link.target = '_blank'; // Open in new tab as fallback
+        link.rel = 'noopener noreferrer';
         link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
