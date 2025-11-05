@@ -133,14 +133,14 @@ export class S3Service {
           `http://localhost:${this.configService.get('PORT', 3000)}`;
         return `${baseUrl}/uploads/${key}`;
       } else {
-        // AWS S3 presigned URL with Content-Disposition header to force download
+        // AWS S3 presigned URL with Content-Disposition header
         const params: AWS.S3.GetObjectRequest = {
           Bucket: this.bucketName,
           Key: key,
-          // Add Content-Disposition header to force download instead of opening in browser
+          // Add Content-Disposition header: attachment for download, inline for view
           ResponseContentDisposition: filename
             ? `attachment; filename="${filename}"`
-            : 'attachment',
+            : 'inline',
         };
 
         const url = await this.s3!.getSignedUrlPromise('getObject', {
