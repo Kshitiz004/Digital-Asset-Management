@@ -8,6 +8,9 @@ import { ConfigService } from '@nestjs/config';
 export const getPostgresConfig = (
   configService: ConfigService,
 ): TypeOrmModuleOptions => {
+  const isProduction = configService.get('NODE_ENV') === 'production';
+  const isDevelopment = configService.get('NODE_ENV') === 'development';
+
   return {
     type: 'postgres',
     host: configService.get('DB_HOST', 'localhost'),
@@ -16,7 +19,13 @@ export const getPostgresConfig = (
     password: configService.get('DB_PASSWORD', 'postgres'),
     database: configService.get('DB_NAME', 'dam_db'),
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-    synchronize: configService.get('NODE_ENV') === 'development', // Auto-create tables in dev
-    logging: configService.get('NODE_ENV') === 'development',
+    synchronize: isDevelopment, // Auto-create tables in dev
+    logging: isDevelopment,
+    // Enable SSL for cloud databases (Neon, Supabase, etc.)
+    ssl: isProduction
+      ? {
+          rejectUnauthorized: false, // Required for cloud databases
+        }
+      : false, // Disable SSL for local development
   };
 };
